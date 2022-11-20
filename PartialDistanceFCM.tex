@@ -1,0 +1,90 @@
+\documentclass[dvipdfmx]{ujarticle}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage[margin=.7in]{geometry}
+\usepackage{ascmac}
+\usepackage{listings,jlisting}
+\usepackage[latin1]{inputenc}
+
+\begin{document}
+\author{Koki Kitamori}
+\title{Partial Distance Fuzzy C-Means}
+\西暦
+\date{\today}
+\maketitle
+\section{欠測値を含むデータへのFCM法の適用}
+部分的距離戦略を用いて，欠測値を含むデータに対してFCM法を適用した．
+
+最小化する目的関数は次の式で表現される．
+\begin{equation}
+    J_{fcm} = \sum_{c=1}^C \sum_{i=1}^{n} \sum_{j=1}^m h_{ij} u_{ci}^{\theta} (x_{ij}-b_{cj})^2
+\end{equation}
+ここで，$h_{ij}$は観測値$x_{ij}$の有無を表す2値変量で観測された場合に1，そうでない場合に0の値をとる．
+クラスタ中心とファジィメンバシップ値の更新式は次のようになる．$\circ$はアダマール積を表す．
+\begin{equation}
+    \boldsymbol{b}_c = \frac{\sum_{i=1}^nu_{ci}^\theta (\boldsymbol{x}_i \circ \boldsymbol{h}_i)}{\sum_{i=1}^nu_{ci}^\theta}
+\end{equation}
+
+\begin{equation}
+    u_{c i}=\left[\sum_{l=1}^{c}\left(\frac{\left\|\boldsymbol{x}_{i} \circ \boldsymbol{h}_i-\boldsymbol{b}_{c}\right\|^{2}}{\left\|\boldsymbol{x}_{i} \circ \boldsymbol{h}_i-\boldsymbol{b}_{l}\right\|^{2}}\right)^{\frac{1}{\theta-1}}\right]^{-1}
+\end{equation}
+
+[部分的距離戦略を用いたFCM法のアルゴリズム]
+\begin{enumerate}
+    \item 要素が$h_{ij}$の行列$H$を作る．
+    \item ファジィメンバシップ値$u_{ci}$をランダムに定める．
+    \item クラスタ中心の更新とファジィメンバシップ値の更新を収束するまで繰り返す．
+\end{enumerate}
+
+クラスタリング結果は以下の2つの指標を用いて比較した．
+\begin{enumerate}
+    \item Bezdekのpartition coeffcient $(V_{PC})$
+     \begin{equation}
+         V_{PC} = \frac{1}{n}\sum_{i=1}^{c}\sum_{j=1}^{n}u_{ij}^2
+    \end{equation}
+    \item Daveのmodified partition coeffcient $(V_{MPC})$
+\begin{equation}
+    V_{MPC} = 1-\frac{c}{c-1}(1-V_{PC})
+\end{equation}
+\end{enumerate}
+
+\section{数値実験}
+UCI Machine Learning Repositoryから3クラス13変量，178個体からなるwineデータセットを用いた．
+欠測値を含むデータはランダムに20個の観測値を欠落させて作成した．
+このレポートでは，欠測値を含まないデータでのクラスタリング結果と部分的距離戦略を用いたFCM法でのクラスタリング結果の間で妥当性尺度の値にどのような差が出るかを実験した．
+ファジィ度は2.0，クラスタ数は2〜6とした．
+
+\section{実験結果}
+\begin{verbatim}
+[欠測値がない場合]
+    |     V_PC          |   V_MPC
+ C=2| 0.8760833757248748| 0.7521667514497496
+ C=3| 0.7909398594655069| 0.6864097891982603
+ C=4| 0.7829819980280049| 0.71064266403734
+ C=5| 0.7440197072466368| 0.680024634058296
+ C=6| 0.7464268182671943| 0.6957121819206331
+ 
+ [欠測値を処理した場合]
+    |     V_PC          |   V_MPC
+ C=2| 0.8760395425126468| 0.7520790850252936
+ C=3| 0.7907883399189741| 0.6861825098784612
+ C=4| 0.782683214526157 | 0.710244286034876
+ C=5| 0.7434561878650163| 0.6793202348312704
+ C=6| 0.7455635445927241| 0.6946762535112689
+\end{verbatim}
+
+上記の実験結果から結束値をないデータでクラスタリングした場合と，欠測値20個含むデータに対して部分的距離戦略を用いたFCM法でクラスタリングした場合ほとんど指標の低下がみられなかった．よってこの方法は欠測値を含む場合でのファジィクラスタリングに有効であったと考えられる．
+
+\section{ソースコード}
+
+\small
+\lstset{
+  numbers=left,
+  frame=trBL,
+  basicstyle=\ttfamily\small,
+  commentstyle={\small\color{comment}},
+  breaklines = true
+}
+\lstinputlisting[caption=PartialDistanceFCM.jl]{PartialDistanceFCM.jl}
+\normalsize
+\end{document}
